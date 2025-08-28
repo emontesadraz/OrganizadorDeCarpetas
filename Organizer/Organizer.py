@@ -15,7 +15,12 @@ except Exception as e:
     print(f"Error al leer la configuración: {e}")
     exit(1)
 
-path = Path.home() / "Desktop"
+user_path = input("Introduce la ruta del directorio a ordenar: ")
+path = Path(user_path).expanduser().resolve()
+
+if not path.exists() or not path.is_dir():
+    print(f"El directorio {user_path} no existe")
+    exit(1)
 
 for categoria, sufijos in config.items():
     carpeta_destino = path / categoria.capitalize()
