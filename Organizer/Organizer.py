@@ -5,6 +5,7 @@ import shutil
 import tkinter as tk
 from tkinter import messagebox, filedialog
 
+
 def organizar_archivos(ruta_usuario):
     try:
         ruta_config = os.path.join(os.path.dirname(__file__), "..", "Config", "default.yaml")
@@ -20,15 +21,20 @@ def organizar_archivos(ruta_usuario):
         return
 
     for categoria, sufijos in config.items():
-        carpeta_destino = path / categoria.capitalize()
-        carpeta_destino.mkdir(exist_ok=True)
-        for archivo in path.iterdir():
-            if archivo.is_file() and archivo.suffix.lower() in sufijos and archivo.parent != carpeta_destino:
+        archivos_categoria = [
+            archivo for archivo in path.iterdir()
+            if archivo.is_file() and archivo.suffix.lower() in sufijos and archivo.parent == path
+        ]
+        if archivos_categoria:
+            carpeta_destino = path / categoria.capitalize()
+            carpeta_destino.mkdir(exist_ok=True)
+            for archivo in archivos_categoria:
                 try:
                     shutil.move(str(archivo), str(carpeta_destino / archivo.name))
                 except Exception as e:
                     messagebox.showerror("Error", f"Error al mover {archivo.name}: {e}")
     messagebox.showinfo("Éxito", "Archivos ordenados con éxito")
+
 
 def main():
     root = tk.Tk()
@@ -47,6 +53,7 @@ def main():
     tk.Button(root, text="Seleccionar carpeta...", command=seleccionar_carpeta).pack(padx=10, pady=5)
     tk.Button(root, text="Organizar", command=lambda: organizar_archivos(entry_ruta.get())).pack(padx=10, pady=10)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
