@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 
 
-def organizar_archivos(ruta_usuario):
+def organizar_archivos(ruta_usuario, text_resultado):
     try:
         ruta_config = os.path.join(os.path.dirname(__file__), "..", "Config", "default.yaml")
         with open(ruta_config, "r") as f:
@@ -20,6 +20,7 @@ def organizar_archivos(ruta_usuario):
         messagebox.showerror("Error", f"El directorio {ruta_usuario} no existe")
         return
 
+    movimientos = []
     for categoria, sufijos in config.items():
         archivos_categoria = [
             archivo for archivo in path.iterdir()
@@ -31,9 +32,17 @@ def organizar_archivos(ruta_usuario):
             for archivo in archivos_categoria:
                 try:
                     shutil.move(str(archivo), str(carpeta_destino / archivo.name))
+                    movimientos.append(f"{archivo.name} → {carpeta_destino.name}")
                 except Exception as e:
                     messagebox.showerror("Error", f"Error al mover {archivo.name}: {e}")
-    messagebox.showinfo("Éxito", "Archivos ordenados con éxito")
+    text_resultado.config(state=tk.NORMAL)
+    text_resultado.delete(1.0, tk.END)
+    if movimientos:
+        text_resultado.insert(tk.END, "\n".join(movimientos))
+        messagebox.showinfo("Éxito", "Archivos ordenados con éxito")
+    else:
+        text_resultado.insert(tk.END, "No se movió ningún archivo")
+    text_resultado.config(state=tk.DISABLED)
 
 
 def main():
@@ -51,7 +60,17 @@ def main():
             entry_ruta.insert(0, carpeta)
 
     tk.Button(root, text="Seleccionar carpeta...", command=seleccionar_carpeta).pack(padx=10, pady=5)
-    tk.Button(root, text="Organizar", command=lambda: organizar_archivos(entry_ruta.get())).pack(padx=10, pady=10)
+
+    frame_resultado = tk.Frame(root)
+    frame_resultado.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 5))
+    text_resultado = tk.Text(frame_resultado, width=60, height=10, state=tk.DISABLED)
+    scrollbar = tk.Scrollbar(frame_resultado, command=text_resultado.yview)
+    text_resultado.config(yscrollcommand=scrollbar.set)
+    text_resultado.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    tk.Button(root, text="Organizar", command=lambda: organizar_archivos(entry_ruta.get(), text_resultado)).pack(
+        padx=10, pady=10)
     root.mainloop()
 
 
