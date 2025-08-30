@@ -18,7 +18,6 @@ def organizar_archivos(ruta_usuario, text_resultado):
         ruta_config = resource_path("Config/default.yaml")
         with open(ruta_config, "r") as f:
             config = yaml.safe_load(f)
-
     except Exception as e:
         messagebox.showerror("Error", f"Error al leer la configuración: {e}")
         return
@@ -29,6 +28,9 @@ def organizar_archivos(ruta_usuario, text_resultado):
         return
 
     movimientos = []
+    movidos = set()
+
+    # Procesar categorías definidas en el YAML
     for categoria, sufijos in config.items():
         archivos_categoria = [
             archivo for archivo in path.iterdir()
@@ -41,8 +43,25 @@ def organizar_archivos(ruta_usuario, text_resultado):
                 try:
                     shutil.move(str(archivo), str(carpeta_destino / archivo.name))
                     movimientos.append(f"{archivo.name} → {carpeta_destino.name}")
+                    movidos.add(archivo)
                 except Exception as e:
                     messagebox.showerror("Error", f"Error al mover {archivo.name}: {e}")
+
+    # Procesar archivos no clasificados → "Others"
+    otros = [archivo for archivo in path.iterdir()
+             if archivo.is_file() and archivo.parent == path and archivo not in movidos]
+
+    if otros:
+        carpeta_otros = path / "Others"
+        carpeta_otros.mkdir(exist_ok=True)
+        for archivo in otros:
+            try:
+                shutil.move(str(archivo), str(carpeta_otros / archivo.name))
+                movimientos.append(f"{archivo.name} → {carpeta_otros.name}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al mover {archivo.name}: {e}")
+
+    # Mostrar resultados en la interfaz
     text_resultado.config(state=tk.NORMAL)
     text_resultado.delete(1.0, tk.END)
     if movimientos:
@@ -51,6 +70,7 @@ def organizar_archivos(ruta_usuario, text_resultado):
     else:
         text_resultado.insert(tk.END, "No se movió ningún archivo")
     text_resultado.config(state=tk.DISABLED)
+
 
 
 def main():
