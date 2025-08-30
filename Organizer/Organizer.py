@@ -2,15 +2,23 @@ import os
 from pathlib import Path
 import yaml
 import shutil
+import sys
 import tkinter as tk
 from tkinter import messagebox, filedialog
 
 
+def resource_path(relative_path: str) -> Path:
+    """Devuelve la ruta absoluta tanto en desarrollo como en ejecutable (PyInstaller)."""
+    if hasattr(sys, "_MEIPASS"):  # cuando se ejecuta como binario
+        return Path(sys._MEIPASS) / relative_path
+    return Path(__file__).parent.parent / relative_path
+
 def organizar_archivos(ruta_usuario, text_resultado):
     try:
-        ruta_config = os.path.join(os.path.dirname(__file__), "..", "Config", "default.yaml")
+        ruta_config = resource_path("Config/default.yaml")
         with open(ruta_config, "r") as f:
             config = yaml.safe_load(f)
+
     except Exception as e:
         messagebox.showerror("Error", f"Error al leer la configuración: {e}")
         return
